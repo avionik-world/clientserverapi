@@ -46,10 +46,14 @@ class PacketDecoder(private val communicationBootstrap: ICommunicationBootstrap,
         if (!checkAccess(ctx)) {
             return
         }
+        if (byteBuf.readInt() < 0)
+            return
+
         val receivedString = ByteBufStringHelper.nextString(byteBuf)
+            ?: throw PacketException("Negative length encountered")
         val jsonLib = JsonLib.fromJsonString(receivedString)
         val packetData = jsonLib.getObject("data", PacketData::class.java)
-                ?: throw PacketException("PacketData is not present.")
+            ?: throw PacketException("PacketData is not present.")
         //objectPacket =-1
 
         val packet = if (packetData.isResponse) {
@@ -72,6 +76,7 @@ class PacketDecoder(private val communicationBootstrap: ICommunicationBootstrap,
             packet
         }
         out.add(WrappedPacket(packetData, packet))
+
         if (this.communicationBootstrap.getDebugMessageManager().isActive(DebugMessage.PACKET_RECEIVED)) {
             println("Received Packet ${packet::class.java.simpleName} (${packetData.uniqueId})")
         }

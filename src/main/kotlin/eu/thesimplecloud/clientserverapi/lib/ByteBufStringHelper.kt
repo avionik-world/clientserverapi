@@ -28,8 +28,11 @@ import java.nio.charset.StandardCharsets
 
 class ByteBufStringHelper {
     companion object {
-        fun nextString(byteBuf: ByteBuf): String {
-            val bytes = ByteArray(byteBuf.readInt())
+        fun nextString(byteBuf: ByteBuf): String? {
+            val length = byteBuf.readInt()
+            if (length < 0)
+                return null
+            val bytes = ByteArray(length)
             byteBuf.readBytes(bytes)
             return String(bytes, StandardCharsets.UTF_8)
         }

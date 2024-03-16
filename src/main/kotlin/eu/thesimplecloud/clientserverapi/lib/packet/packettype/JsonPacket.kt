@@ -52,8 +52,8 @@ abstract class JsonPacket : IPacket {
     var jsonLib: JsonLib = JsonLib.empty(PACKET_GSON)
 
     override fun read(byteBuf: ByteBuf, communicationBootstrap: ICommunicationBootstrap) {
-        jsonLib = JsonLib.fromJsonString(ByteBufStringHelper.nextString(byteBuf), PACKET_GSON)
-
+        val nextString = ByteBufStringHelper.nextString(byteBuf) ?: return
+        jsonLib = JsonLib.fromJsonString(nextString, PACKET_GSON)
     }
 
     override fun write(byteBuf: ByteBuf, communicationBootstrap: ICommunicationBootstrap) {
