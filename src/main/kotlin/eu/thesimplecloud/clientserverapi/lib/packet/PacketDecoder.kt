@@ -46,17 +46,25 @@ class PacketDecoder(private val communicationBootstrap: ICommunicationBootstrap,
         if (!checkAccess(ctx)) {
             return
         }
-        if (byteBuf.readInt() < 0)
-            return
 
-        val receivedString = ByteBufStringHelper.nextString(byteBuf)
-            ?: throw PacketException("Negative length encountered")
-        val jsonLib = JsonLib.fromJsonString(receivedString)
-        val packetData = jsonLib.getObject("data", PacketData::class.java)
-            ?: throw PacketException("PacketData is not present.")
-        //objectPacket =-1
+        try {
+            val receivedString = ByteBufStringHelper.nextString(byteBuf)
+            val jsonLib = JsonLib.fromJsonString(receivedString)
+            val packetData = jsonLib.getObject("data", PacketData::class.java)
+                ?: throw PacketException("PacketData is not present.")
+            //objectPacket =-1
 
-        val packet = if (packetData.isResponse) {
+            val packet = getClientServerPacket(packetData, byteBuf)
+            out.add(WrappedPacket(packetData, packet))
+
+            if (this.communicationBootstrap.getDebugMessageManager().isActive(DebugMessage.PACKET_RECEIVED)) {
+                println("Received Packet ${packet::class.java.simpleName} (${packetData.uniqueId})")
+            }
+        } catch (_: NegativeArraySizeException) { }
+    }
+
+    private fun getClientServerPacket(packetData: PacketData, byteBuf: ByteBuf): IPacket {
+        return if (packetData.isResponse) {
             val objectPacket = ObjectPacket.getNewEmptyObjectPacket<Any>()
             objectPacket.read(byteBuf, communicationBootstrap)
             objectPacket
@@ -67,7 +75,7 @@ class PacketDecoder(private val communicationBootstrap: ICommunicationBootstrap,
                 byteBuf.clear()
                 throw PacketException("Can't find opposite packet of: ${packetData.sentPacketName}")
             }
-            val packet =  packetClass.newInstance()
+            val packet = packetClass.getDeclaredConstructor().newInstance()
             try {
                 packet.read(byteBuf, communicationBootstrap)
             } catch (e: Exception) {
@@ -75,13 +83,7 @@ class PacketDecoder(private val communicationBootstrap: ICommunicationBootstrap,
             }
             packet
         }
-        out.add(WrappedPacket(packetData, packet))
-
-        if (this.communicationBootstrap.getDebugMessageManager().isActive(DebugMessage.PACKET_RECEIVED)) {
-            println("Received Packet ${packet::class.java.simpleName} (${packetData.uniqueId})")
-        }
     }
-
 
     private fun checkAccess(ctx: ChannelHandlerContext): Boolean {
         val connection = getConnectionByChannelHandlerContext(ctx)
