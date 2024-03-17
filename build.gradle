@@ -28,7 +28,7 @@ plugins {
 apply plugin: 'maven-publish'
 
 group 'eu.thesimplecloud.clientserverapi'
-version '4.1.18'
+version '4.2.0'
 
 sourceCompatibility = 1.8
 
@@ -61,24 +61,19 @@ tasks.register('sourcesJar', Jar) {
 }
 
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-        }
-    }
     repositories {
         maven {
-            if (project.version.endsWith("SNAPSHOT")) {
-                url 'https://repo.thesimplecloud.eu/artifactory/list/gradle-dev-local/'
-            } else {
-                url 'https://repo.thesimplecloud.eu/artifactory/list/gradle-release-local//'
-            }
-
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/avionik-world/clientserverapi")
             credentials {
-                username = project.hasProperty("mavenUser") ? project.property("mavenUser") : System.getenv("MAVEN_USERNAME")
-                password = project.hasProperty("mavenPassword") ? project.property("mavenPassword") : System.getenv("MAVEN_PASSWORD")
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
             }
+        }
+    }
+    publications {
+        gpr(MavenPublication) {
+            from(components.java)
         }
     }
 }
