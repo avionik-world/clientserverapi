@@ -22,10 +22,6 @@
 
 package eu.thesimplecloud.clientserverapi.lib.connection
 
-import eu.thesimplecloud.clientserverapi.lib.defaultpackets.PacketIOCreateFileTransfer
-import eu.thesimplecloud.clientserverapi.lib.defaultpackets.PacketIOFileTransfer
-import eu.thesimplecloud.clientserverapi.lib.defaultpackets.PacketIOFileTransferComplete
-import eu.thesimplecloud.clientserverapi.lib.filetransfer.util.QueuedFile
 import eu.thesimplecloud.clientserverapi.lib.handler.packet.IncomingPacketHandler
 import eu.thesimplecloud.clientserverapi.lib.packet.IPacket
 import eu.thesimplecloud.clientserverapi.lib.packet.PacketData
@@ -34,12 +30,7 @@ import eu.thesimplecloud.clientserverapi.lib.packetresponse.WrappedResponseHandl
 import eu.thesimplecloud.clientserverapi.lib.packetresponse.responsehandler.ObjectPacketResponseHandler
 import eu.thesimplecloud.clientserverapi.lib.promise.CommunicationPromise
 import eu.thesimplecloud.clientserverapi.lib.promise.ICommunicationPromise
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import java.io.File
-import java.nio.file.Files
 import java.util.*
-import java.util.concurrent.LinkedBlockingQueue
 
 abstract class AbstractConnection() : IConnection {
 
@@ -49,7 +40,6 @@ abstract class AbstractConnection() : IConnection {
     private var wasCloseIntended: Boolean = false
     @Volatile
     private var sendingFile = false
-    private val fileQueue = LinkedBlockingQueue<QueuedFile>()
     private val packetResponseManager by lazy { getCommunicationBootstrap().getPacketResponseManager() }
 
     private val incomingPacketHandler = IncomingPacketHandler(this)
@@ -69,51 +59,6 @@ abstract class AbstractConnection() : IConnection {
     }
 
     abstract fun sendPacket(wrappedPacket: WrappedPacket, promise: ICommunicationPromise<Any>)
-
-    @Synchronized
-    override fun sendFile(file: File, savePath: String, timeout: Long): ICommunicationPromise<Unit> {
-        val unitPromise = CommunicationPromise<Unit>(timeout)
-        val queuedFile = QueuedFile(file, savePath, unitPromise)
-        sendQueuedFile(queuedFile)
-        return unitPromise
-    }
-
-    @Synchronized
-    private fun sendQueuedFile(queuedFile: QueuedFile) {
-        if (sendingFile) {
-            this.fileQueue.add(queuedFile)
-            return
-        }
-        this.sendingFile = true
-        val transferUuid = UUID.randomUUID()
-        val fileBytes = Files.readAllBytes(queuedFile.file.toPath())
-        var bytes = fileBytes.size
-        GlobalScope.launch {
-            sendUnitQuery(PacketIOCreateFileTransfer(transferUuid, queuedFile.savePath, queuedFile.file.lastModified())).awaitCoroutine()
-            while (bytes != 0) {
-                when {
-                    bytes > BYTES_PER_FILEPACKET -> {
-                        val sendBytes = Arrays.copyOfRange(fileBytes, fileBytes.size - bytes, (fileBytes.size - bytes) + BYTES_PER_FILEPACKET)
-                        bytes -= BYTES_PER_FILEPACKET
-                        sendUnitQuery(PacketIOFileTransfer(transferUuid, sendBytes), 3000).awaitCoroutine()
-                    }
-                    else -> {
-                        val sendBytes = Arrays.copyOfRange(fileBytes, fileBytes.size - bytes, fileBytes.size)
-                        bytes = 0
-                        sendUnitQuery(PacketIOFileTransfer(transferUuid, sendBytes), 3000).awaitCoroutine()
-                    }
-                }
-            }
-            sendUnitQuery(PacketIOFileTransferComplete(transferUuid), 3000).awaitCoroutine()
-            queuedFile.promise.trySuccess(Unit)
-
-            //check for next file
-            sendingFile = false
-            if (fileQueue.isNotEmpty()) {
-                sendQueuedFile(fileQueue.poll())
-            }
-        }
-    }
 
     fun setConnectionCloseIntended() {
         this.wasCloseIntended = true

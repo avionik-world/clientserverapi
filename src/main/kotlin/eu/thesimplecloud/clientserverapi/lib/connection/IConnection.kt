@@ -51,13 +51,6 @@ interface IConnection : IPacketSender {
     fun getCommunicationBootstrap(): ICommunicationBootstrap
 
     /**
-     * Sends a file via this connection
-     * @param file the file to send
-     * @param savePath the path where the file should be saved
-     */
-    fun sendFile(file: File, savePath: String, timeout: Long): ICommunicationPromise<Unit>
-
-    /**
      * Closes this [IConnection]
      */
     fun closeConnection(): ICommunicationPromise<Unit>

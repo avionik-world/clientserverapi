@@ -29,10 +29,6 @@ import eu.thesimplecloud.clientserverapi.lib.debug.DebugMessageManager
 import eu.thesimplecloud.clientserverapi.lib.debug.IDebugMessageManager
 import eu.thesimplecloud.clientserverapi.lib.directorywatch.DirectoryWatchManager
 import eu.thesimplecloud.clientserverapi.lib.directorywatch.IDirectoryWatchManager
-import eu.thesimplecloud.clientserverapi.lib.filetransfer.ITransferFileManager
-import eu.thesimplecloud.clientserverapi.lib.filetransfer.TransferFileManager
-import eu.thesimplecloud.clientserverapi.lib.filetransfer.directory.DirectorySyncManager
-import eu.thesimplecloud.clientserverapi.lib.filetransfer.directory.IDirectorySyncManager
 import eu.thesimplecloud.clientserverapi.lib.handler.IConnectionHandler
 import eu.thesimplecloud.clientserverapi.lib.packet.IPacket
 import eu.thesimplecloud.clientserverapi.lib.packet.packettype.BytePacket
@@ -71,9 +67,7 @@ abstract class AbstractCommunicationBootstrap(
     }
 
 
-    private val transferFileManager = TransferFileManager()
     private val directoryWatchManager = DirectoryWatchManager()
-    private val directorySyncManager = DirectorySyncManager(directoryWatchManager)
     private val debugMessageManager = DebugMessageManager()
     private val packetManager = PacketManager()
     private val packetResponseManager = PacketResponseManager()
@@ -125,14 +119,6 @@ abstract class AbstractCommunicationBootstrap(
 
     override fun getAccessHandler(): IAccessHandler {
         return this.accessHandler
-    }
-
-    override fun getTransferFileManager(): ITransferFileManager {
-        return this.transferFileManager
-    }
-
-    override fun getDirectorySyncManager(): IDirectorySyncManager {
-        return this.directorySyncManager
     }
 
     override fun getDirectoryWatchManager(): IDirectoryWatchManager {

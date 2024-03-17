@@ -23,7 +23,6 @@
 package eu.thesimplecloud.clientserverapi.lib.handler
 
 import eu.thesimplecloud.clientserverapi.lib.connection.IConnection
-import eu.thesimplecloud.clientserverapi.lib.filetransfer.directory.DirectorySyncManager
 
 open class DefaultConnectionHandler : IConnectionHandler {
 
@@ -44,9 +43,7 @@ open class DefaultConnectionHandler : IConnectionHandler {
     }
 
     override fun onConnectionInactive(connection: IConnection) {
-        val directorySyncManager = connection.getCommunicationBootstrap().getDirectorySyncManager()
-        directorySyncManager as DirectorySyncManager
-        directorySyncManager.removeFromDirectorySyncs(connection)
+
     }
 
 }

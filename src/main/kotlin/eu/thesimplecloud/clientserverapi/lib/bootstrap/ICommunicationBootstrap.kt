@@ -25,8 +25,6 @@ package eu.thesimplecloud.clientserverapi.lib.bootstrap
 import eu.thesimplecloud.clientserverapi.lib.access.IAccessHandler
 import eu.thesimplecloud.clientserverapi.lib.debug.IDebugMessageManager
 import eu.thesimplecloud.clientserverapi.lib.directorywatch.IDirectoryWatchManager
-import eu.thesimplecloud.clientserverapi.lib.filetransfer.ITransferFileManager
-import eu.thesimplecloud.clientserverapi.lib.filetransfer.directory.IDirectorySyncManager
 import eu.thesimplecloud.clientserverapi.lib.handler.IConnectionHandler
 import eu.thesimplecloud.clientserverapi.lib.packet.IPacket
 import eu.thesimplecloud.clientserverapi.lib.packet.packettype.ObjectPacket
@@ -75,16 +73,6 @@ interface ICommunicationBootstrap : IBootstrap {
      * Returns the [IAccessHandler]
      */
     fun getAccessHandler(): IAccessHandler
-
-    /**
-     * Returns the [ITransferFileManager] to transfer files
-     */
-    fun getTransferFileManager(): ITransferFileManager
-
-    /**
-     * Returns the [IDirectorySyncManager] to synchronize directories between server and client
-     */
-    fun getDirectorySyncManager(): IDirectorySyncManager
 
     /**
      * Returns the [IDirectoryWatchManager] to listen for directory changes
