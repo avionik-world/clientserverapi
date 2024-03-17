@@ -60,7 +60,8 @@ class PacketDecoder(private val communicationBootstrap: ICommunicationBootstrap,
             if (this.communicationBootstrap.getDebugMessageManager().isActive(DebugMessage.PACKET_RECEIVED)) {
                 println("Received Packet ${packet::class.java.simpleName} (${packetData.uniqueId})")
             }
-        } catch (_: NegativeArraySizeException) { }
+        } catch (_: NegativeArraySizeException) {
+        } catch (_: IllegalArgumentException) {}
     }
 
     private fun getClientServerPacket(packetData: PacketData, byteBuf: ByteBuf): IPacket {
