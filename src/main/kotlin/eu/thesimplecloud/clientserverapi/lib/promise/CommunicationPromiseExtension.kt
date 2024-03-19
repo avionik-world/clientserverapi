@@ -24,6 +24,7 @@ package eu.thesimplecloud.clientserverapi.lib.promise
 
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
+import java.util.concurrent.CompletableFuture
 
 
 fun ICommunicationPromise<Unit>.completeWhenAllCompleted(promises: List<ICommunicationPromise<*>>): ICommunicationPromise<Unit> {
@@ -101,6 +102,25 @@ fun <T : Any> handleMethodCallNonBlocking(promise: ICommunicationPromise<T>, met
     if (method.returnType != ICommunicationPromise::class.java)
         throw UnsupportedOperationException("Cannot call a method non blocking not returning a ICommunicationPromise")
     return promise.then { method.invoke(it, *args) as ICommunicationPromise<Any> }.flatten()
+}
+
+fun <T : Any> CompletableFuture<T>.toCommunicationPromise(): ICommunicationPromise<T> {
+    val communicationPromise = CommunicationPromise<T>()
+    this.handle { t, throwable ->
+        if (t == null) {
+            communicationPromise.setFailure(throwable)
+        } else {
+            communicationPromise.setSuccess(t)
+        }
+    }
+    return communicationPromise
+}
+
+fun <T : Any> ICommunicationPromise<T>.toCompletableFuture(): CompletableFuture<T> {
+    val completableFuture = CompletableFuture<T>()
+    this.addResultListener { completableFuture.complete(it) }
+        .addFailureListener { completableFuture.completeExceptionally(it) }
+    return completableFuture
 }
 
 private fun <T> mockInterface(interfaceClass: Class<T>, callFunction: (method: Method, args: Array<Any>) -> Any?): T {
