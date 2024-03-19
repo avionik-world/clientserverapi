@@ -52,7 +52,7 @@ abstract class JsonPacket : IPacket {
     var jsonLib: JsonLib = JsonLib.empty(PACKET_GSON)
 
     override fun read(byteBuf: ByteBuf, communicationBootstrap: ICommunicationBootstrap) {
-        val nextString = ByteBufStringHelper.nextString(byteBuf) ?: return
+        val nextString = ByteBufStringHelper.nextString(byteBuf)
         jsonLib = JsonLib.fromJsonString(nextString, PACKET_GSON)
     }
 
