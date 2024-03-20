@@ -42,6 +42,13 @@ import io.netty.handler.codec.MessageToByteEncoder;
 @Sharable
 public class ProtobufVarint32LengthFieldPrepender extends MessageToByteEncoder<ByteBuf> {
 
+    /**
+     * Erzeugt einen neuen ProtobufVarint32LengthFieldPrepender. Dieser Konstruktor ist leer, da keine benutzerdefinierten Initialisierungen erforderlich sind.
+     */
+    public ProtobufVarint32LengthFieldPrepender() {
+        // Dieser Konstruktor ist leer, da keine benutzerdefinierten Initialisierungen erforderlich sind.
+    }
+
     @Override
     protected void encode(
             ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {

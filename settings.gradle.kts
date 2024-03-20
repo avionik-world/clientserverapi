@@ -20,5 +20,5 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-rootProject.name = 'clientserverapi'
+rootProject.name = "clientserverapi"
 
